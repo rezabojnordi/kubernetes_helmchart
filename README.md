@@ -1,6 +1,3 @@
-Sure! Here's a polished, professional example of a README section for a Helm chart that guides someone on installation, dependencies, and usage:
-
----
 
 # My Helm Chart
 
