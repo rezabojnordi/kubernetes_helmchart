@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-ingress
+  namespace: argocd  # Adjust namespace if argocd-server is in a different namespace
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"  # Required for HTTPS passthrough to ArgoCD
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS  # Ensures backend communication uses HTTPS
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Replace with your cert-manager ClusterIssuer name
+spec:
+  ingressClassName: nginx  # Specify the Nginx Ingress class
+  rules:
+  - host: argo.inhusk.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server  # Service name for ArgoCD
+            port:
+              number: 443
+  tls:
+  - hosts:
+    - argo.inhusk.ai
+    secretName: argocd-tls  # cert-manager will create and manage this secret

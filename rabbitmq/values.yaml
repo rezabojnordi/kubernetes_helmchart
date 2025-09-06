@@ -1,0 +1,321 @@
+rabbitmq:
+  nameOverride: "inhusk-rabbitmq"
+  memoryHighWatermark:
+    enabled: "true"
+    type: "relative"
+    value: "0.4"
+  resources:
+    limits:
+      memory: "4Gi"
+    requests:
+      memory: "200m"
+  auth:
+    username: "<path:argo/data/rabbit#USER>" # Changed to match default_user in rabbitmq.conf
+    password: "<path:argo/data/rabbit#PASSWORD>" # Changed to match default_pass in rabbitmq.conf
+    securePassword: false # Set to false since an explicit password is provided
+    
+  ## Loading a RabbitMQ definitions file
+  loadDefinition:
+    enabled: true # Enabled to load definitions.json as in Docker Compose
+    #file: "/app/load_definition.json" # Set to match Docker Compose volume mount path
+    existingSecret: "{{ .Release.Name }}-load-definition" # Secret name for definitions.json
+
+  ## Extra secrets for definitions.json
+  extraSecrets:
+    load-definition: # Added to include definitions.json content from your configuration
+      load_definition.json: |
+        {
+          "rabbit_version": "4.1.3",
+          "users": [
+            {
+              "name": "inhusk-prod",
+              "password_hash": "DqWdSrkMX073ciodjm4Gx020inna+S3u6lUw/ayJmnUnWfHW",
+              "hashing_algorithm": "rabbit_password_hashing_sha256",
+              "tags": "administrator"
+            },
+            {
+              "name": "devops-user",
+              "password_hash": "Ef7Ze3XUWxD4v3zouP1dGmkY1/t1s0Ts/HKwDNvYxGowi9ed",
+              "hashing_algorithm": "rabbit_password_hashing_sha256",
+              "tags": "administrator"
+            },
+            {
+              "name": "reader",
+              "password_hash": "xEFJR0S4XzuJ/t0e8eA3tNcXKjrooht3dad5JE3dZGeD4etT",
+              "hashing_algorithm": "rabbit_password_hashing_sha256",
+              "tags": "monitoring"
+            }
+          ],
+          "vhosts": [
+            {
+              "name": "inhusk-prod"
+            },
+            {
+              "name": "/"
+            }
+          ],
+          "permissions": [
+            {
+              "user": "inhusk-prod",
+              "vhost": "inhusk-prod",
+              "configure": ".*",
+              "write": ".*",
+              "read": ".*"
+            },
+            {
+              "user": "inhusk-prod",
+              "vhost": "/",
+              "configure": ".*",
+              "write": ".*",
+              "read": ".*"
+            },
+            {
+              "user": "devops-user",
+              "vhost": "inhusk-prod",
+              "configure": ".*",
+              "write": ".*",
+              "read": ".*"
+            },
+            {
+              "user": "devops-user",
+              "vhost": "/",
+              "configure": ".*",
+              "write": ".*",
+              "read": ".*"
+            },
+            {
+              "user": "reader",
+              "vhost": "inhusk-prod",
+              "configure": "",
+              "write": "",
+              "read": ".*"
+            }
+          ],
+          "policies": [],
+          "operator_policies": [
+            {
+              "name": "default_operator_policy_ARGO_managed",
+              "vhost": "inhusk-prod",
+              "pattern": ".*",
+              "apply-to": "classic_queues",
+              "priority": 0,
+              "definition": {
+                "queue-version": 2
+              }
+            }
+          ],
+          "queues": [
+            {
+              "name": "ai.q.res.dream.image",
+              "vhost": "inhusk-prod",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-queue-type": "classic"
+              }
+            },
+            {
+              "name": "ai.q.req.dream.interpret",
+              "vhost": "inhusk-prod",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-queue-type": "classic"
+              }
+            },
+            {
+              "name": "ai.q.req.compatibility",
+              "vhost": "inhusk-prod",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-queue-type": "classic"
+              }
+            },
+            {
+              "name": "ai.q.res.dream.interpret",
+              "vhost": "inhusk-prod",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-queue-type": "classic"
+              }
+            },
+            {
+              "name": "ai.q.res.compatibility",
+              "vhost": "inhusk-prod",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-queue-type": "classic"
+              }
+            },
+            {
+              "name": "ai.q.res.dream",
+              "vhost": "inhusk-prod",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-queue-type": "classic"
+              }
+            }
+          ],
+          "exchanges": [
+            {
+              "name": "ai.x.topic.dream",
+              "vhost": "inhusk-prod",
+              "type": "topic",
+              "durable": true,
+              "auto_delete": false,
+              "internal": false,
+              "arguments": {}
+            },
+            {
+              "name": "ai.x.topic.compatibility",
+              "vhost": "inhusk-prod",
+              "type": "topic",
+              "durable": true,
+              "auto_delete": false,
+              "internal": false,
+              "arguments": {}
+            }
+          ],
+          "bindings": [
+            {
+              "source": "ai.x.topic.compatibility",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.req.compatibility",
+              "destination_type": "queue",
+              "routing_key": "ai.e.req.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.compatibility",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.req.compatibility",
+              "destination_type": "queue",
+              "routing_key": "ai.e.req.compatibility.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.compatibility",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.res.compatibility",
+              "destination_type": "queue",
+              "routing_key": "ai.e.res.compatibility.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.dream",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.req.dream.interpret",
+              "destination_type": "queue",
+              "routing_key": "ai.e.req.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.dream",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.req.dream.interpret",
+              "destination_type": "queue",
+              "routing_key": "ai.e.req.dream.interpret.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.dream",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.res.dream",
+              "destination_type": "queue",
+              "routing_key": "ai.e.res.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.dream",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.res.dream",
+              "destination_type": "queue",
+              "routing_key": "ai.e.res.dream.*",
+              "arguments": {}
+            },
+            {
+              "source": "ai.x.topic.dream",
+              "vhost": "inhusk-prod",
+              "destination": "ai.q.res.dream.image",
+              "destination_type": "queue",
+              "routing_key": "ai.e.res.dream.image.*",
+              "arguments": {}
+            }
+          ]
+        }
+  extraSecretsPrependReleaseName: true # Set to true to prepend release name to the secret for uniqueness
+
+  ## RabbitMQ Configuration
+  extraConfiguration: |-
+    load_definitions = /app/load_definition.json
+  replicaCount: 1 # Matches single instance in Docker Compose
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 120
+    timeoutSeconds: 5 # Matches Docker Compose healthcheck timeout
+    periodSeconds: 10 # Matches Docker Compose healthcheck interval
+    failureThreshold: 5 # Matches Docker Compose healthcheck retries
+    successThreshold: 1
+    exec:
+      command:
+        - ping # Matches Docker Compose healthcheck command
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 10 # Matches Docker Compose healthcheck start_period
+    timeoutSeconds: 5 # Matches Docker Compose healthcheck timeout
+    periodSeconds: 10 # Matches Docker Compose healthcheck interval
+    failureThreshold: 5 # Matches Docker Compose healthcheck retries
+    successThreshold: 1
+    exec:
+      command:
+        - ping # Matches Docker Compose healthcheck command
+  persistence:
+    enabled: true # Kept enabled to ensure data persistence as in Docker setup
+    storageClass: ""
+    selector: {}
+    accessModes:
+      - ReadWriteOnce
+    existingClaim: ""
+    mountPath: /opt/bitnami/rabbitmq/.rabbitmq/mnesia
+    subPath: ""
+    size: 8Gi
+    annotations: {}
+    labels: {}
+  persistentVolumeClaimRetentionPolicy:
+    enabled: false
+    whenScaled: Retain
+    whenDeleted: Retain
+
+  ## @section Exposure parameters
+  service:
+    type: ClusterIP
+    portEnabled: true
+    distPortEnabled: true
+    managerPortEnabled: true
+    epmdPortEnabled: true
+    ports:
+      amqp: 5672 # Matches Docker Compose AMQP port
+      amqpTls: 5671
+      dist: 25672
+      manager: 15672 # Matches Docker Compose management UI port
+      metrics: 9419
+      epmd: 4369
+    portNames:
+      amqp: "amqp"
+      amqpTls: "amqp-tls"
+      dist: "dist"
+      manager: "http-stats"
+      metrics: "metrics"
+      epmd: "epmd"
+    nodePorts:
+      amqp: ""
+      amqpTls: ""
+      dist: ""
+      manager: ""
+      epmd: ""
+      metrics: ""
+    

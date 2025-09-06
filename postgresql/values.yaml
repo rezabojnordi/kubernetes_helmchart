@@ -1,0 +1,24 @@
+postgresql:
+  auth:
+    database: inhusk_backend_prod
+    password: "<path:argo/data/postgres#PASSWORD>"
+    postgresPassword: "<path:argo/data/postgres#POSTGRESS_PASSWORD>"
+    username: "<path:argo/data/postgres#USER_NAME>"
+  fullnameOverride: postgres
+  primary:
+    extendedConfiguration: huge_pages = off
+    initdb:
+      args: --set huge_pages=off
+    persistence:
+      enabled: true
+      storageClass: do-block-storage-retain
+    resources:
+      limits:
+        cpu: 500m
+        memory: 2Gi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+  shmVolume:
+    enabled: true
+    sizeLimit: 256Mi

@@ -1,0 +1,98 @@
+## @param wordpressUsername WordPress username
+##
+wordpressUsername: user
+## @param wordpressPassword WordPress user password
+## Defaults to a random 10-character alphanumeric string if not set
+##
+wordpressPassword: ""
+## @param existingSecret Name of existing secret containing WordPress credentials
+## NOTE: Must contain key `wordpress-password`
+## NOTE: When it's set, the `wordpressPassword` parameter is ignored
+##
+existingSecret: ""
+## @param wordpressEmail WordPress user email
+##
+wordpressEmail: user@example.com
+## @param wordpressFirstName WordPress user first name
+##
+wordpressFirstName: FirstName
+## @param wordpressLastName WordPress user last name
+##
+wordpressLastName: LastName
+## @param wordpressBlogName Blog name
+##
+wordpressBlogName: Hidzo Blog!
+## @param wordpressTablePrefix Prefix to use for WordPress database tables
+##
+wordpressTablePrefix: wp_
+## @param wordpressScheme Scheme to use to generate WordPress URLs
+##
+wordpressScheme: http
+
+persistence:
+  ## @param persistence.enabled Enable persistence using Persistent Volume Claims
+  ##
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+## Prometheus Exporter / Metrics configuration
+##
+metrics:
+  enabled: false
+  service:
+    ports:
+      metrics: 9150
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "{{ .Values.metrics.containerPorts.metrics }}"
+  ## Prometheus Operator ServiceMonitor configuration
+  ##
+  serviceMonitor:
+    enabled: false
+
+service:
+  type: ClusterIP
+
+mariadb:
+  ## @param mariadb.enabled Deploy a MariaDB server to satisfy the applications database requirements
+  ## To use an external database set this to false and configure the `externalDatabase.*` parameters
+  ##
+  enabled: true
+  ## @param mariadb.architecture MariaDB architecture. Allowed values: `standalone` or `replication`
+  ##
+  architecture: replication
+
+
+  auth:
+    rootPassword: ""
+    database: bitnami_wordpress
+    username: bn_wordpress
+    password: ""
+
+  primary:
+    persistence:
+      enabled: true
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+    resourcesPreset: "small"
+
+resourcesPreset: "small"
+
+ingress:
+  enabled: true
+  pathType: ImplementationSpecific
+
+  apiVersion: ""
+  ingressClassName: "nginx"
+  hostname: inhusk.ai
+  path: /
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls: true
+  tlsWwwPrefix: true

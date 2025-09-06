@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wordpress
+  namespace: argocd
+spec:
+  project: inhusk
+  sources:
+  - repoURL: 'https://charts.bitnami.com/bitnami'
+    chart: wordpress
+    targetRevision: 26.0.0
+    helm:
+      valueFiles:
+      - $values/wordpress/values.yaml
+  - repoURL: 'https://github.com/helitechnology/inhusk-helmchart.git'
+    targetRevision: prod
+    ref: values
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wordpress
