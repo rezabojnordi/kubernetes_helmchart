@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: rezabojnordi/flask-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  ingressClassName: nginx  # Specifies the NGINX Ingress class
+  hosts:
+    - host: test.inhusk.ai
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: flask-tls
+      hosts:
+        - test.inhusk.ai
