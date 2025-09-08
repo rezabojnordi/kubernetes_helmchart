@@ -1,0 +1,23 @@
+# Override the subchart named "redis" (assuming that's how it's aliased in your Chart.yaml)
+redis:
+  architecture: replication  # Enables master-replica mode (default is standalone)
+  auth:
+    password: "redis@123"  # Required for security; set a strong password
+    sentinel: true  # Enables password auth for Sentinel as well
+  master:
+    persistence:
+      enabled: true  # Enable persistent storage for the master (uses PVC)
+      size: 2Gi  # Storage size; adjust based on needs
+  replica:
+    replicaCount: 3  # Number of replicas (read-only slaves)
+    persistence:
+      enabled: true  # Enable persistent storage for replicas
+      size: 2Gi
+  sentinel:
+    enabled: true  # Enables Redis Sentinel for automatic failover
+    masterAsRedis: true  # Runs Sentinel in the same pods as Redis (simpler; default)
+    quorum: 2  # Minimum Sentinels needed to agree on failover (for 3 replicas, 2 is typical)
+    persistence:
+      enabled: false  # Sentinel doesn't need persistence by default
+  metrics:
+    enabled: false  # Optional: Enable Prometheus metrics exporter if you have monitoring set up
