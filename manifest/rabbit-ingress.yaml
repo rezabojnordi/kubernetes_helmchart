@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rabbitmq-ui
+  namespace: inhusk
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - management-rabbitmq.inhusk.ai
+    secretName: rabbitmq-tls
+  rules:
+  - host: management-rabbitmq.inhusk.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq-inhusk-rabbitmq
+            port:
+              number: 15672
